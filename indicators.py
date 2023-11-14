@@ -24,26 +24,29 @@ def calculate_rolling_std(values, window_size):
 # Indicator 1 - Simple Moving Average
 def calculate_simple_moving_average(prices, window_size = 10):
     simple_moving_average = calculate_rolling_mean(prices, window_size)
-    return simple_moving_average
+    simple_moving_average_ratio = prices / simple_moving_average
+    return simple_moving_average, simple_moving_average_ratio
 
 # Indicator 2 - Bollinger band
-def calculate_bollinger_bands(values, window_size=10, num_std_dev=2):
+def calculate_bollinger_band_percentage(values, window_size=10, num_std_dev=2):
     rolling_mean = calculate_rolling_mean(values, window_size)
     rolling_std = calculate_rolling_std(values, window_size)
     upper_band = rolling_mean + rolling_std * num_std_dev
     lower_band = rolling_mean - rolling_std * num_std_dev
-    return upper_band, lower_band
+    bollinger_band_percentage = (values - lower_band) / (upper_band - lower_band)
+    return bollinger_band_percentage
 
 #Indicator 3 - Momentum 
 def calculate_momentum(values, window_size = 10):
     return (values / values.shift(window_size)) - 1
     
 # Indicator 4 - Commodity Channel Index - CCI 
-def calculate_commodity_channel_index(values, window_size=10):
+def calculate_commodity_channel_index(values, window_size=5):
     rolling_mean = calculate_rolling_mean(values, window_size)
-    rolling_std = calculate_rolling_std(values, window_size)
-    scaling_factor = 2 / rolling_std
-    return (values - rolling_mean) / (scaling_factor * rolling_std)
+    mean_deviation = abs(values - rolling_mean).rolling(window_size).mean()
+    # rolling_std = calculate_rolling_std(values, window_size)
+    # scaling_factor = 2 / rolling_std
+    return (values - rolling_mean) / (0.015 * mean_deviation)
 
 # Indicator 5 - Moving Average Convergence Divergence (MACD)
 def calculate_moving_average_convergence_divergence(values, short_period = 12, long_period = 26, signal_period = 9):    
@@ -55,7 +58,9 @@ def calculate_moving_average_convergence_divergence(values, short_period = 12, l
     macd_line = short_ema - long_ema
     # Calculate the signal line (9-period EMA of MACD)
     signal_line = macd_line.ewm(ignore_na=False, span=signal_period, adjust=True).mean()
-    return macd_line, signal_line
+    # Calculate the MACD Histogram
+    macd_histogram = macd_line - signal_line
+    return macd_histogram
     
 def test_code():
     start_date = dt.datetime(2008, 1, 1)
