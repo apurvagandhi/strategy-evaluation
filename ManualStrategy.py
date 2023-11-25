@@ -8,8 +8,6 @@ import pandas as pd
 from util import get_data
 import indicators as indicators
 
-
-
 def __init__(self):
     pass 
 
@@ -22,6 +20,7 @@ def author(self):
 
 def testPolicy(symbol="JPM", start_date=dt.datetime(2008, 1, 1), end_date=dt.datetime(2009, 1, 31), starting_value=100000,  		  	   		  		 		  		  		    	 		 		   		 		  
 ):  
+    debug = False
     # Date Range
     dates = pd.date_range(start_date, end_date)	 
     # Read in adjusted closing prices for given symbols, date range, automatically adds SPY  	
@@ -37,18 +36,7 @@ def testPolicy(symbol="JPM", start_date=dt.datetime(2008, 1, 1), end_date=dt.dat
     commodity_channel_index = indicators.calculate_commodity_channel_index(prices_df)
     bollinger_band_percentage = indicators.calculate_bollinger_band_percentage(prices_df)
     macd_histogram = indicators.calculate_moving_average_convergence_divergence(prices_df)
-    print("prices df ")
-    print(prices_df)
-    print("simple moving average")
-    print(simple_moving_average)
-    print("momentum")
-    print(momentum)
-    print("commodity channel index")
-    print(commodity_channel_index)
-    print("bollinger band percentage")
-    print(bollinger_band_percentage)
-    print("macd histogram")
-    print(macd_histogram)
+
     # Create a DataFrame to hold the trading signals
     signals = pd.DataFrame(index=prices_df.index)
     signals['sma_signal'] = 0.0
@@ -59,7 +47,6 @@ def testPolicy(symbol="JPM", start_date=dt.datetime(2008, 1, 1), end_date=dt.dat
     signals['final_signal'] = 0.0
 
     # Generate trading signals based on the indicators
-    # These are just example rules and may need to be adjusted
     signals['sma_signal'][simple_moving_average > prices_df] = 1.0 # buy signal
     signals['sma_signal'][simple_moving_average < prices_df] = -1.0 # sell signal
 
@@ -75,7 +62,6 @@ def testPolicy(symbol="JPM", start_date=dt.datetime(2008, 1, 1), end_date=dt.dat
     signals['macd_signal'][macd_histogram > 0] = 1.0
     signals['macd_signal'][macd_histogram < 0] = -1.0
 
-    # Create a final signal based on the individual signals
     # Create a temporary DataFrame with the individual signals
     temp_df = signals[['sma_signal', 'momentum_signal', 'chi_signal', 'bollinger_signal', 'macd_signal']]
     # Calculate the mode along the row axis
@@ -87,8 +73,6 @@ def testPolicy(symbol="JPM", start_date=dt.datetime(2008, 1, 1), end_date=dt.dat
     trades_df['Order'] = np.NaN
     trades_df['Shares'] = 0
         
-    print("signals df")
-    print(signals)
     share_holding = 0
     for date in prices_df.index:
         trades_df.loc[date,"Order"] = "SELL"
@@ -112,8 +96,23 @@ def testPolicy(symbol="JPM", start_date=dt.datetime(2008, 1, 1), end_date=dt.dat
         else: 
             trades_df.loc[date,"Order"] = "NO TRADE"
             trades_df.loc[date, "Shares"] = 0
-
-    print("trades df")
-    print(trades_df)
+    
+    if debug:
+        print("prices df ")
+        print(prices_df)
+        print("simple moving average")
+        print(simple_moving_average)
+        print("momentum")
+        print(momentum)
+        print("commodity channel index")
+        print(commodity_channel_index)
+        print("bollinger band percentage")
+        print(bollinger_band_percentage)
+        print("macd histogram")
+        print(macd_histogram)
+        print("signals df")
+        print(signals)
+        print("trades df")
+        print(trades_df)
 
     return trades_df
