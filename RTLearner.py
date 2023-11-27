@@ -35,12 +35,11 @@ class RTLearner(object):
         data_y = np.array([data_y])
         data = np.append(data_x, data_y.T, axis=1)
         self.tree = self.build_tree(data)
-        # print("Tree is ", self.tree)
 
     def build_tree(self, data):
         data_y = data[:, -1]
         if data.shape[0] == 1 or data.shape[0] <= self.leaf_size:
-            return np.array([['leaf', stats.mode(data_y, keepdims=True)[0][0], None, None]])
+            return np.array([['leaf', stats.mode(data_y)[0][0], None, None]])
         elif np.all(data_y == data_y[0]):
             return np.array([['leaf', data_y[0], None, None]])
         else: 
@@ -48,7 +47,7 @@ class RTLearner(object):
             splitVal = np.median(data[:, random_feature])
             maximum_value = max(data[:, random_feature])
             if maximum_value == splitVal:
-                return np.array([['leaf', stats.mode(data[:, -1], keepdims=True)[0][0], None, None]])
+                return np.array([['leaf', stats.mode(data[:, -1])[0][0], None, None]])
             
             left_tree = self.build_tree(data[data[:, random_feature] <= splitVal])
             right_tree = self.build_tree(data[data[:, random_feature] > splitVal])

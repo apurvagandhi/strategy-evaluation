@@ -5,8 +5,8 @@
 import datetime as dt
 import numpy as np 
 import pandas as pd
-from util import get_data
 import indicators as indicators
+import util as ut  
 
 def __init__(self):
     pass 
@@ -24,7 +24,7 @@ def testPolicy(symbol="JPM", start_date=dt.datetime(2008, 1, 1), end_date=dt.dat
     # Date Range
     dates = pd.date_range(start_date, end_date)	 
     # Read in adjusted closing prices for given symbols, date range, automatically adds SPY  	
-    prices_all = get_data([symbol], dates)  
+    prices_all = ut.get_data([symbol], dates)  
     # Just the portfolio symbol
     prices_df = prices_all[symbol]	   		
     # Just the spy 		
@@ -68,35 +68,31 @@ def testPolicy(symbol="JPM", start_date=dt.datetime(2008, 1, 1), end_date=dt.dat
     signals['final_signal'] = temp_df.mode(axis=1)[0]
 
     #create trade dataframe
-    trades_df = pd.DataFrame(index = prices_df.index)
-    trades_df['Symbol'] = 'JPM'
-    trades_df['Order'] = np.NaN
-    trades_df['Shares'] = 0
-        
+    df_trades_new = pd.DataFrame(index=prices_df.index, columns=[symbol])
+    df_trades_new[symbol] = 0.0
     share_holding = 0
-    for date in prices_df.index:
-        trades_df.loc[date,"Order"] = "SELL"
-        if signals["final_signal"][date] == -1:
+    for i, date in enumerate(prices_df.index):
+        if signals["final_signal"][date] == -1:  # Short entry
             if share_holding == 0:
-                trades_df.loc[date,"Shares"] = -1000
+                df_trades_new.iloc[i, 0] = -1000
                 share_holding -= 1000
             elif share_holding == 1000:
-                trades_df.loc[date, "Shares"] = -2000
+                df_trades_new.iloc[i, 0] = -2000
                 share_holding -= 2000
-            else: trades_df.loc[date, "Shares"] = 0
-        elif signals["final_signal"][date] == 1:
-            trades_df.loc[date,"Order"] = "BUY"
+            else:
+                df_trades_new.iloc[i, 0] = 0
+        elif signals["final_signal"][date] == 1:  # Long entry
             if share_holding == 0:
-                trades_df.loc[date,"Shares"] = 1000
+                df_trades_new.iloc[i, 0] = 1000
                 share_holding += 1000
             elif share_holding == -1000:
-                trades_df.loc[date, "Shares"] = 2000
+                df_trades_new.iloc[i, 0] = 2000
                 share_holding += 2000
-            else: trades_df.loc[date, "Shares"] = 0
-        else: 
-            trades_df.loc[date,"Order"] = "NO TRADE"
-            trades_df.loc[date, "Shares"] = 0
-    
+            else:
+                df_trades_new.iloc[i, 0] = 0
+        else:
+            df_trades_new.iloc[i, 0] = 0
+
     if debug:
         print("prices df ")
         print(prices_df)
@@ -113,6 +109,6 @@ def testPolicy(symbol="JPM", start_date=dt.datetime(2008, 1, 1), end_date=dt.dat
         print("signals df")
         print(signals)
         print("trades df")
-        print(trades_df)
+        print(df_trades_new)
 
-    return trades_df
+    return df_trades_new

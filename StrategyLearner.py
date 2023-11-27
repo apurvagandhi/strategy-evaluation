@@ -28,15 +28,12 @@ GT ID: 903862828
 """  		  	   		  		 		  		  		    	 		 		   		 		  
   		  	   		  		 		  		  		    	 		 		   		 		  
 import datetime as dt  		  	   		  		 		  		  		    	 		 		   		 		  
-import random
-import numpy as np  		  	   		  		 		  		  		    	 		 		   		 		  
-  		  	   		  		 		  		  		    	 		 		   		 		  
+import numpy as np  		  	   		  		 		  		  		    	 		 		   		 		   	   		  		 		  		  		    	 		 		   		 		  
 import pandas as pd  		  	   		  		 		  		  		    	 		 		   		 		  
 import util as ut  		  	
 import BagLearner as bl   		  		 		  		  		    	 		 		   		 		  
 import indicators as indicators
 import RTLearner as rt
-import sys	 		  		  		    	 		 		   		 		  
   		  	   		  		 		  		  		    	 		 		   		 		  
 class StrategyLearner(object):  		  	   		  		 		  		  		    	 		 		   		 		  
     """  		  	   		  		 		  		  		    	 		 		   		 		  
@@ -87,7 +84,7 @@ class StrategyLearner(object):
         commodity_channel_index = indicators.calculate_commodity_channel_index(prices_df)
         bollinger_band_percentage = indicators.calculate_bollinger_band_percentage(prices_df)
         macd_histogram = indicators.calculate_moving_average_convergence_divergence(prices_df)
-        lookback_window = 14
+        lookback_window = 5
 
         # Prepare the training data
         x_train = pd.concat((simple_moving_average_ratio, bollinger_band_percentage, momentum, commodity_channel_index, macd_histogram), axis=1)
@@ -144,7 +141,7 @@ class StrategyLearner(object):
 
         # Calculate the Technical Indicators for Portfolio Symbols
         simple_moving_average, simple_moving_average_ratio = indicators.calculate_simple_moving_average(prices_df)
-        momentum = indicators.calculate_momentum(prices_df)
+        momentum = indicators.calculate_momentum(prices_df, window_size=10)
         commodity_channel_index = indicators.calculate_commodity_channel_index(prices_df)
         bollinger_band_percentage = indicators.calculate_bollinger_band_percentage(prices_df)
         macd_histogram = indicators.calculate_moving_average_convergence_divergence(prices_df)
@@ -157,47 +154,32 @@ class StrategyLearner(object):
         y_test = self.learner.query(x_test)
 
         # Create a DataFrame to store the trades
-        df_trades = pd.DataFrame(index=prices_df.index, columns=['Symbol', 'Order', 'Shares'])
-        df_trades['Symbol'] = 'JPM'
-        df_trades['Order'] = np.NaN
-        df_trades['Shares'] = 1000
+        df_trades_new = prices_df.copy()
+        df_trades_new.values[:, :] = 0
 
-        # Generate buy and sell signals based on the model's prediction
         holding = 0
         for i in range(y_test.shape[0]):
             if holding == 0:
                 if y_test[i] > 1:
-                    df_trades.iloc[i, 1] = 'BUY'
-                    df_trades.iloc[i, 2] = 1000
+                    df_trades_new.iloc[i, 0] = 1000
                     holding += 1000
                 elif y_test[i] < 0:
-                    df_trades.iloc[i, 1] = 'SELL'
-                    df_trades.iloc[i, 2] = -1000
+                    df_trades_new.iloc[i, 0] = -1000
                     holding -= 1000
-                else:
-                    df_trades.iloc[i, 1] = 'HOLD'
             elif holding == 1000:
                 if y_test[i] < 0:
-                    df_trades.iloc[i, 1] = 'SELL'
-                    df_trades.iloc[i, 2] = -2000
+                    df_trades_new.iloc[i, 0] = -2000
                     holding -= 2000
                 elif y_test[i] == 0:
-                    df_trades.iloc[i, 1] = 'SELL'
-                    df_trades.iloc[i, 2] = -1000
+                    df_trades_new.iloc[i, 0] = -1000
                     holding -= 1000
-                else:
-                    df_trades.iloc[i, 1] = 'HOLD'
             else:
                 if y_test[i] > 0:
-                    df_trades.iloc[i, 1] = 'BUY'
-                    df_trades.iloc[i, 2] = 2000
+                    df_trades_new.iloc[i, 0] = 2000
                     holding += 2000
                 elif y_test[i] == 0:
-                    df_trades.iloc[i, 1] = 'BUY'
-                    df_trades.iloc[i, 2] = 1000
+                    df_trades_new.iloc[i, 0] = 1000
                     holding += 1000
-                else:
-                    df_trades.iloc[i, 1] = 'HOLD'
 
         # Print debug information if verbose is True
         if self.verbose:
@@ -205,9 +187,9 @@ class StrategyLearner(object):
             print("x_test", x_test)
             print("y_test shape:", y_test.shape)
             print("y_test:", y_test)
-            print("df_trades", df_trades)
+            print("df_trades", df_trades_new)
 
-        return df_trades
+        return df_trades_new
 
     # This method returns the GT username of the student
     def author(self):

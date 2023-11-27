@@ -71,19 +71,17 @@ def compute_portvals(trades, start_val=100000, commission=0, impact=0):
     trades_df  = prices_df.copy()
     trades_df[symbols] = 0
     trades_df['Cash'] = 0
-    
+
     ### Step 3
     for index, order_row in orders_df.iterrows():
         number_of_shares = int(order_row["Shares"])
         price_of_share = prices_df.loc[index][order_row["Symbol"]]
-        if order_row['Order'] == 'SELL':
-            trades_df.loc[index, order_row["Symbol"]] += number_of_shares * 1
-            trades_df.loc[index, "Cash"] += number_of_shares * price_of_share * -1
-        elif order_row['Order'] == 'BUY':
-            trades_df.loc[index, order_row["Symbol"]] += number_of_shares * 1
-            trades_df.loc[index, "Cash"] += number_of_shares * price_of_share * -1
-        else:
-            continue
+
+        trades_df.loc[index, order_row["Symbol"]] += number_of_shares * 1
+        trades_df.loc[index, "Cash"] += number_of_shares * price_of_share * -1
+        trades_df.loc[index, "Cash"] -= commission
+        trades_df.loc[index, "Cash"] -= (impact * price_of_share * number_of_shares)
+
     ### Step 4   
     holdings_df  = trades_df.copy()
     for count, (index, holdings_df_row) in enumerate(holdings_df.iterrows()):

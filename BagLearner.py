@@ -1,5 +1,6 @@
 import random
 import numpy as np  
+from scipy import stats
 
 class BagLearner(object):  		  	   		  		 		  		  		    	 		 		   		 		  
     """  		  	   		  		 		  		  		    	 		 		   		 		  
@@ -64,11 +65,11 @@ class BagLearner(object):
         """  		 
         y_pred_results = []
         # For each learner in the self.learners collection, it calls the query method of that learner with the provided points.
-        # The results of these queries are collected into a list and mean of that list is returned.
+        # The results of these queries are collected into a list and mode of that list is returned.
         for learner in self.learners:
             y_pred_results.append(learner.query(points))
             
-        return np.mean(y_pred_results, axis = 0)
+        return stats.mode(y_pred_results, axis = 0)[0][0]
     	    	 		 		   		 		  
   		  	   		  		 		  		  		    	 		 		   		 		  
 if __name__ == "__main__":  		  	   		  		 		  		  		    	 		 		   		 		  

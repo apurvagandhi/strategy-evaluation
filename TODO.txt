@@ -1,21 +1,4 @@
-TODO:
-Vertical blue lines indicating LONG entry points for manual strategy in sample
-Vertical black lines indicating SHORT entry points for manual strategy in sample
 
-Vertical blue lines indicating LONG entry points for manual strategy out sample
-Vertical black lines indicating SHORT entry points for manual strategy out sample
-    
-Add LONG to legend in manual strategy in sample
-Add SHORT to legend in manual strategy in sample
 
-Add LONG to legend out manual strategy out sample
-Add SHORT to legend out manual strategy out sample
 
-Add Strategy Learner In-Sample data to the summary table
-Add Strategy Learner Out-Sample data to the summary table
 
-convert your regression learner to use mode rather than mean in both the RTLearner and BagLearner.
-
-Look at Phong's and compare blue line of graph with mine
-do experiment1 and experiment2
-Play around with impact
